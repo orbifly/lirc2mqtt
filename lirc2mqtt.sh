@@ -59,14 +59,61 @@ interprete_mqtt_command()
 {
   remote="$1"
   line="$2"
-  if [ "${debug}" != "0" ]; then echo "Got message '${line}' for '${remote}'."; fi
-  #strip and remove brackets
-  line=$( echo "${line}" | sed "s#^ *\[\(.*\)\] *\$#\1#" )
-  #make it a line with quoted commands
-  options=$( echo "${line}" | sed  -e "s#[\"]##g" -e "s#[, ]#\" \"#g" -e "s#^#\"#;s#\$#\"#" )
-  if [ "${debug}" != "0" ]; then echo "Full command line is 'irsend send_once \"${remote}\" ${options}'."; fi
-  #Use xargs to interprete the options string as a list of strings
-  echo "send_once \"${remote}\" ${options}" | xargs irsend
+  if [ "${debug}" != "0" ]; then echo "interprete_mqtt_command( '${remote}', '${line}' )"; fi
+  ##strip and remove brackets
+  #line=$( echo "${line}" | sed "s#^ *\[\(.*\)\] *\$#\1#" )
+  ##make it a line with quoted commands
+  #options=$( echo "${line}" | sed  -e "s#[\"]##g" -e "s#[, ]#\" \"#g" -e "s#^#\"#;s#\$#\"#" )
+  #if [ "${debug}" != "0" ]; then echo "Full command line is 'irsend send_once \"${remote}\" ${options}'."; fi
+  ##Use xargs to interprete the options string as a list of strings
+  #echo "SEND_ONCE \"${remote}\" ${options}" | xargs irsend
+  #Possible commands:
+  # { "send":"once", "commands": ["cmd1", "cmd2", "cmd1"] }
+  # { "send":"hold", "time_msec":"1500", "commands": ["cmd1", "cmd2", "cmd1"] }
+  #strip spaces
+  send=$( echo "${line}" | jq --compact-output --raw-output ".send" )
+  time_msec=$( echo "${line}" | jq --compact-output --raw-output ".time_msec" )
+  commands=$( echo "${line}" | jq --compact-output '.commands | .[]' )
+  if [ "${time_msec}" != "null"  -a  "$( echo "${time_msec}" | sed "s#[^0-9]*\([0-9]\+\).*#\1#" )" = "" ]
+  then
+    echo "The value of 'time_msec' has to contain a number. '${time_msec}' isn't a valid value" >&2
+    return 1
+  fi
+  if [ "${time_msec}" != "null"  -a  "${time_msec}" != "" ]
+  then
+    if [ "${time_msec}" -ge "60000" ]
+    then
+      echo "The value of 'time_msec' is '${time_msec}' that's one minute or more. Will be clamped to 60 seconds."
+      time_msec="60000"
+    fi
+  fi
+  if [ "${commands}" = "" ]
+  then
+    echo "The attribute 'commands' needs to contain at least on key to send." >&2
+    return 2
+  fi
+
+  if [ "${send}" = "hold" ]
+  then
+    if [ "${time_msec}" != "null" ]
+    then
+      echo "SEND_START \"${remote}\" ${commands}" | xargs irsend
+      sleep "$( expr "${time_msec}" "/" "1000" ).$( expr "${time_msec}" "%" "1000" )"
+      echo "SEND_STOP \"${remote}\" ${commands}" | xargs irsend
+    else
+      echo "On '{\"send\": \"hold\", ...}' the attribute 'time_msec' is needed as well." >&2
+    fi
+  fi
+  if [ "${send}" = "once" ]
+  then
+    echo "SEND_ONCE \"${remote}\" ${commands}" | xargs irsend
+  fi
+  
+  if [ "${send}" != "once"  -a  "${send}" != "hold" ]
+  then
+    echo "The attribute 'send' needs to have a value 'once' or 'hold'. '${send}' is not valid." >&2
+    return 3
+  fi
 }
 
 
