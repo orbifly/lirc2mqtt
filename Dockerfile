@@ -12,6 +12,7 @@ WORKDIR /lirc2mqtt
 # Copy needed files into the container at /lirc2mqtt
 ADD ./lirc2mqtt.sh /lirc2mqtt/
 ADD ./data/lirc2mqtt.config /lirc2mqtt/example.config
+ADD ./LICENSE /lirc2mqtt/
 
 VOLUME /data
 
