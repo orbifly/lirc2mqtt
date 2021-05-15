@@ -191,16 +191,14 @@ loop_for_mqtt_set()
     do
       echo "${remote}" "${line}"
       interprete_mqtt_command "${remote}" "${line}" &
-    done < <( mqtt sub -h "${mqtt_server}" -t "${mqtt_base_topic}/${remote}/send" )
+    done < <( mosquitto_sub -h "${mqtt_server}" -t "${mqtt_base_topic}/${remote}/send" )
     log_error "Connection to mqtt lost."
     sleep 60
   done
 }
 
 #MQTT test
-mqtt_test_results=$( mqtt test -h "${mqtt_server}" )
-log_info "${mqtt_test_results}"
-echo "${mqtt_test_results}" | grep -q "OK"
+mosquitto_pub -h "${mqtt_server}" -t "${mqtt_base_topic}" --null-message
 if [ "$?" != "0" ]
 then
   log_error "Mqtt failed to test host - exit script."

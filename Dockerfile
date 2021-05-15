@@ -4,7 +4,7 @@
 FROM debian:buster
 
 # Upgrade and add some software we need: mpc and mqtt client
-RUN apt update && apt -y upgrade; apt install -y lirc wget jq && wget https://github.com/hivemq/mqtt-cli/releases/download/v4.4.0/mqtt-cli-4.4.0.deb && apt install -y ./mqtt-cli-4.4.0.deb && apt remove -y wget; apt autoremove -y; rm -rf /var/lib/apt/lists/*
+RUN apt update && apt -y upgrade; apt install -y lirc jq mosquitto-clients; apt autoremove -y; rm -rf /var/lib/apt/lists/*
 
 # Set the working directory to /lirc2mqtt
 WORKDIR /lirc2mqtt
