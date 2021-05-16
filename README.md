@@ -1,5 +1,5 @@
 # lirc2mqtt
-Connects a MQTT message broker to a LIRC infrared device
+Connects a MQTT message broker to a LIRC infrared device.
 Up to now, it can just send codes using 'irsend'.
 
 ## Prerequisites ##
@@ -10,9 +10,9 @@ Up to now, it can just send codes using 'irsend'.
 ## MQTT -> LIRC ##
 This lirc2mqtt service can just send IR commands. For that it's listening to one MQTT-topic for each of your remotes defined in lirc:
 `lirc/\<nameOfRemote\>/send`
-To send an key send a message to the corresponding MQTT-topic. You can try it using the [commandline mqtt client](https://github.com/hivemq/mqtt-cli):
-`mqtt pub -h localhost -t "lirc/\<nameOfRemote\>/send" -m '{ "send":"once", "commands": ["cmd1", "cmd2", "cmd1"] }'`
-`mqtt pub -h localhost -t "lirc/\<nameOfRemote\>/send" -m '{ "send":"hold", "time_msec":"1500", "commands": ["vol_up"] }'`
+To send an key send a message to the corresponding MQTT-topic. You can try it using the commandline clients from mosquitto-clients:
+`mosquitto_pub -h localhost -t "lirc/\<nameOfRemote\>/send" -m '{ "send":"once", "commands": ["cmd1", "cmd2", "cmd1"] }'`
+`mosquitto_pub -h localhost -t "lirc/\<nameOfRemote\>/send" -m '{ "send":"hold", "time_msec":"1500", "commands": ["vol_up"] }'`
 The second will send the command for 1.5 seconds.
 
 ## LIRC -> MQTT ##
