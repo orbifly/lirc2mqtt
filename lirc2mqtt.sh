@@ -46,6 +46,8 @@ log_error()
 
 mqtt_server="localhost"
 mqtt_base_topic="lirc"
+mqtt_user=""
+mqtt_password=""
 debug="1"
 if [ -f "/data/lirc2mqtt.config" ]
 then
@@ -75,6 +77,12 @@ read_parameters()
       "--mqtt-base-topic=")
         mqtt_base_topic="${option_value}"
       ;;
+      "--mqtt_user=")
+        mqtt_user="${option_value}"
+      ;;
+      "--mqtt_password=")
+        mqtt_password="${option_value}"
+      ;;
       "--debug=")
         debug="${option_value}"
       ;;
@@ -95,6 +103,8 @@ then
   echo "debug = ${debug}"
   echo "mqtt_server = ${mqtt_server}"
   echo "mqtt_base_topic = ${mqtt_base_topic}"
+  echo "mqtt_user = ${mqtt_user}"
+  echo "mqtt_password = ${mqtt_password}"
 fi
 
 # Parameter $1 is the remote defined in lirc.
@@ -191,14 +201,14 @@ loop_for_mqtt_set()
     do
       echo "${remote}" "${line}"
       interprete_mqtt_command "${remote}" "${line}" &
-    done < <( mosquitto_sub -h "${mqtt_server}" -t "${mqtt_base_topic}/${remote}/send" )
+    done < <( mosquitto_sub -h "${mqtt_server}" -t "${mqtt_base_topic}/${remote}/send" -u "${mqtt_user}" -P "${mqtt_password}" )
     log_error "Connection to mqtt lost."
     sleep 60
   done
 }
 
 #MQTT test
-mosquitto_pub -h "${mqtt_server}" -t "${mqtt_base_topic}" --null-message
+mosquitto_pub -h "${mqtt_server}" -t "${mqtt_base_topic}" --null-message -u "${mqtt_user}" -P "${mqtt_password}"
 if [ "$?" != "0" ]
 then
   log_error "Mqtt failed to test host - exit script."
